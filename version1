@@ -1,2 +1,40 @@
 
-const int led = 3;
+//BME project: Dripsensor
+
+//Naming the pins
+const int sensor = 4;
+
+// Initializing the variables
+int sensorVal = 0;
+int drips = 0;
+int dripTreshold = 0;
+
+void setup()
+{
+//Configuring the pins
+pinMode(sensor, INPUT);
+
+//Begin serial communication
+Serial.begin(9600);
+
+}
+
+void loop()
+{  
+//Reading pins values
+sensorVal = analogRead(sensor);
+
+//Counting drips
+if (sensorVal > dripTreshold)
+{
+    drips += 1;
+}
+// Printing
+Serial.print("Drips: ");
+Serial.println(drips);
+Serial.print("Sensor value:")
+Serial.println(sensorVal)
+
+}
+
+
