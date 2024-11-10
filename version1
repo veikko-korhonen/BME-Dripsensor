@@ -32,8 +32,8 @@ if (sensorVal > dripTreshold)
 // Printing
 Serial.print("Drips: ");
 Serial.println(drips);
-Serial.print("Sensor value:")
-Serial.println(sensorVal)
+Serial.print("Sensor value:");
+Serial.println(sensorVal);
 
 }
 
