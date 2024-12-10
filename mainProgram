@@ -1,0 +1,123 @@
+
+//BME project: Dripsensor
+
+//Naming the pins
+const int sensor = 4;
+
+// Initializing the variables
+int newValue = 0;
+int drips = 0;
+int dripTreshold = 2810;
+unsigned long currentTime = 0;
+int prevDripTime = 0;
+int prevDripInterval = 0;
+const int numReadings = 10;  // Number of readings to store
+int readings[numReadings];   // Array to store readings
+int i = 0;               // index for circular buffer
+int trimCount = 1;  // Number of values to trim from each end
+bool arrayFilled = false;    // Tracks if the array is fully populated
+int lcdKey     = 0;
+int adcKeyIN  = 0;
+int r=255;   //Set red brightness (Range: 0-255) 
+int g=255;   //Set green brightness 
+int b=0;     //Set blue brightness
+
+#define btnRIGHT  0
+#define btnUP     1
+#define btnDOWN   2
+#define btnLEFT   3
+#define btnSELECT 4
+#define btnNONE   5
+
+//Loading libraries
+#include "DFRobot_RGBLCD1602.h"
+//#include <LiquidCrystal.h>
+
+//Configuring screen
+DFRobot_RGBLCD1602 lcd(/*RGBAddr*/0x2D ,/*lcdCols*/16,/*lcdRows*/2);
+
+void setup()
+{
+//Configuring the pins
+pinMode(sensor, INPUT);
+
+//Begin serial communication
+Serial.begin(19200);
+
+//Initializing screen
+lcd.init();
+lcd.setRGB(r,g,b);  // Set RGB
+
+// Initialize readings array with zeros
+for (int i = 0; i < numReadings; i++) {
+    readings[i] = 0;
+}
+}
+
+void loop()
+{  
+
+//Keeping track of time
+currentTime = millis();
+prevDripInterval = currentTime - prevDripTime;
+
+// Read new analog value
+newValue = analogRead(sensor);
+
+// Store the new value in the array (circular buffer)
+readings[i] = newValue;
+i = (i + 1) % numReadings;  // Circular index
+
+// Check if the array is fully filled
+if (i == 0) {
+    arrayFilled = true;
+}
+
+// If array is filled, compute the trimmed mean
+if (arrayFilled) {
+    int sortedReadings[numReadings];
+
+    // Copy readings into a temporary array
+    for (int i = 0; i < numReadings; i++) {
+      sortedReadings[i] = readings[i];
+    }
+
+    // Sort the array (simple bubble sort for demonstration)
+    for (int i = 0; i < numReadings - 1; i++) {
+      for (int j = 0; j < numReadings - i - 1; j++) {
+        if (sortedReadings[j] > sortedReadings[j + 1]) {
+          int temp = sortedReadings[j];
+          sortedReadings[j] = sortedReadings[j + 1];
+          sortedReadings[j + 1] = temp;
+        }
+      }
+    }
+
+    // Trim the smallest and largest value (1 value from each side)
+    int sum = 0;
+    for (int i = trimCount; i < numReadings - trimCount; i++) {
+      sum += sortedReadings[i];
+    }
+
+    // Calculate trimmed mean
+    int count = numReadings - (2 * trimCount);  // Number of remaining values
+    float trimmedMean = (float)sum / count;
+}
+
+
+//Counting drips
+
+if ((newValue < (trimmedMean + dripTreshold)) && prevDripInterval > 100)
+{
+    drips += 1;
+    //prevDripTime = milis
+}
+// Printing
+Serial.print("Drips: ");
+Serial.println(drips);
+Serial.print("Sensor value:");
+Serial.println(newValue);
+
+}
+
+
