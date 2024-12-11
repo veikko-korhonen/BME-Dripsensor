@@ -9,12 +9,14 @@ int newValue = 0;
 int drips = 0;
 int dripTreshold = 2810;
 unsigned long currentTime = 0;
-int prevDripTime = 0;
+unsigned long prevDripTime = 0;
 int prevDripInterval = 0;
+int debounceDelay = 20000
 const int numReadings = 10;  // Number of readings to store
 int readings[numReadings];   // Array to store readings
 int i = 0;               // index for circular buffer
 int trimCount = 1;  // Number of values to trim from each end
+float trimmedMean = 0;
 bool arrayFilled = false;    // Tracks if the array is fully populated
 int lcdKey     = 0;
 int adcKeyIN  = 0;
@@ -58,7 +60,7 @@ void loop()
 {  
 
 //Keeping track of time
-currentTime = millis();
+currentTime = micros();
 prevDripInterval = currentTime - prevDripTime;
 
 // Read new analog value
@@ -101,16 +103,16 @@ if (arrayFilled) {
 
     // Calculate trimmed mean
     int count = numReadings - (2 * trimCount);  // Number of remaining values
-    float trimmedMean = (float)sum / count;
+    trimmedMean = (float)sum / count;
 }
 
 
 //Counting drips
 
-if ((newValue < (trimmedMean + dripTreshold)) && prevDripInterval > 100)
+if ((newValue < (trimmedMean + dripTreshold)) && prevDripInterval > debounceDelay)
 {
     drips += 1;
-    //prevDripTime = milis
+    //prevDripTime = micros();
 }
 // Printing
 Serial.print("Drips: ");
